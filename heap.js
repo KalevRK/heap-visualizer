@@ -4,7 +4,7 @@
 
 'use strict';
 
-// TODO: create Heap constructor
+// Create Heap constructor
 var Heap = function() {
   this.storage = [];
 };
@@ -39,19 +39,7 @@ Heap.prototype.insert = function(value) {
   return recurse(this.storage.length-1);
 };
 
-// TODO: array to represent input data
-var input = [5,7,1,10,0,12];
-
-var heap = new Heap();
-
-input.forEach(function(value) {
-  heap.insert(value);
-  console.log(heap.viewStorage());
-});
-
-
-
-// TODO: function to transform heap array into a nested d3 data structure
+// Create function to transform heap array into a nested d3 data structure
 // Accepts an input array and returns an object representing the hierarchical structure of the heap
 function arrayToHierarchy(arr) {
   
@@ -100,8 +88,19 @@ function arrayToHierarchy(arr) {
   return nodeData;
 }
 
-// TODO: write d3 code for tree visualization
+// Array to represent input data
+var input = [5,7,1,10,0,12];
 
+var heap = new Heap();
+
+input.forEach(function(value) {
+  heap.insert(value);
+  console.log(heap.viewStorage());
+});
+
+var treeData = arrayToHierarchy(heap.viewStorage());
+
+// D3 code for tree visualization
 var margin = {top: 20, right: 120, bottom: 20, left: 120},
   width = 960 - margin.right - margin.left,
   height = 500 - margin.top - margin.bottom;
