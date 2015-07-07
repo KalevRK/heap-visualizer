@@ -1,6 +1,6 @@
 // Heap visualization
 // Authors: Katrina Uychaco && Kalev Roomann-Kurrik
-// Last Modified: Monday July 7, 2015
+// Last Modified: Tuesday July 7, 2015
 
 'use strict';
 
@@ -172,7 +172,7 @@ var tree = d3.layout.tree()
   .size([height, width]);
 
 var diagonal = d3.svg.diagonal()
-  .projection(function(d) { return [d.y, d.x]; });
+  .projection(function(d) { return [d.x, d.y]; });
 
 var svg = d3.select('body').append('svg')
   .attr('width', width + margin.right + margin.left)
@@ -183,6 +183,13 @@ var svg = d3.select('body').append('svg')
 var root = treeData[0];
 
 update(root);
+
+setTimeout(function() {
+  console.log('Updating tree');
+  treeData = arrayToHierarchy(heap.viewStorage());
+  console.log('treeData:', treeData);
+  update(treeData[0]);
+}, 2000);
 
 function update(source) {
 
@@ -201,7 +208,7 @@ function update(source) {
   var nodeEnter = node.enter().append('g')
     .attr('class', 'node')
     .attr('transform', function(d) {
-      return 'translate(' + d.y + ',' + d.x + ')'; });
+      return 'translate(' + d.x + ',' + d.y + ')'; });
 
   nodeEnter.append('circle')
     .attr('r', function(d) { return d.value; })

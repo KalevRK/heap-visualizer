@@ -10,7 +10,7 @@ Tasks
 - [x] Create removeMax method on Heap class
 - [x] Function to convert Heap storage array into nested object format needed for d3 tree visualization
 - [x] Create d3 tree layout visualization of Heap
-- [ ] Rotate d3 tree layout visualization to be vertical
+- [x] Rotate d3 tree layout visualization to be vertical
 - [ ] Update d3 tree layout visualization based on state of Heap storage array
 - [ ] Update d3 tree layout visualization on every step of the insert method on the Heap class
 - [ ] Update d3 tree layout visualization on every step of the removeMax method on the Heap class
