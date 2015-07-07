@@ -47,8 +47,7 @@ Heap.prototype.removeMax = function() {
     // if nothing to remove then return null
     return null;
   } else if (this.storage.length === 1) {
-    // check if heap currently has one node
-    // pop off the lone element in the storage array and return it
+    // if heap only has one element in it then pop off the lone element in the storage array and return it
     return this.storage.pop();
   }
   // handle all other cases where heap has more than one node
@@ -57,45 +56,37 @@ Heap.prototype.removeMax = function() {
   // replace the root node with the last node of the heap and remove the last node
   this.storage[0] = this.storage.pop();
 
+  // preserve context for inner recursive helper function
   var that = this;
 
   // recursive function to restore the heap property of the heap
   var reheapify = function(index) {
-    // check whether the current node has children, and if so then store their values
-    var firstChild = 2*index + 1 < that.storage.length ? that.storage[2*index + 1] : null;
-    var secondChild = 2*index + 2 < that.storage.length ? that.storage[2*index + 2] : null;
+    // set index of max value to current node's index
+    var maxIndex = index;
 
-    // if no children then we are done
-    if (!firstChild) {
-      return;
-    } else if (secondChild) {
-      // if the current node has two children then check if both are less than or equal to the current node
-      if (firstChild <= that.storage[index] && secondChild <= that.storage[index]) {
-        // if both children are less than or equal to the current node then we are done
-        return;
-      } else {
-        // if both children are not less than or equal to the current node
-        // then find the max of the two and swap the current node with that child
-        var maxChild = firstChild > secondChild ? 2*index + 1 : 2*index + 2;
-        // swap node at index with node at maxChild
-        that.storage[index] = that.storage[index] ^ that.storage[maxChild];
-        that.storage[maxChild] = that.storage[index] ^ that.storage[maxChild];
-        that.storage[index] = that.storage[index] ^ that.storage[maxChild];
-        // recursively reheapify this time checking the node at its new index
-        reheapify(maxChild);
-      }
-    } else {
-      // if the current node only has one child then check to see if it is greater than the current node
-      if (firstChild > that.storage[index]) {
-        // if the only child is greater than the current node then swap the child node with the current node
-        that.storage[2*index + 1] = that.storage[index];
-        that.storage[index] = firstChild;
-      }
-      // whether or not we swapped, since this node only had one child and each level of the heap
-      // must be filled before another level can start then we are done
-      return;
+    // check first child node's value against current node
+    if ((2*index + 1 < that.storage.length) && (that.storage[2*index + 1] > that.storage[index])) {
+      // if greater then set index of max value to first child node's index
+      maxIndex = 2*index + 1;
+    }
+    // check second child node's value against current max node
+    if ((2*index + 2 < that.storage.length) && (that.storage[2*index + 2] > that.storage[maxIndex])) {
+      // if greater then set index of max value to second child node's index
+      maxIndex = 2*index + 2;
+    }
+    // if the index of the max value is not equal to the index of the current node
+    // then swap the nodes and reheapify at the new index of the current node
+    if (maxIndex !== index) {
+      // swap node values
+      that.storage[index] = that.storage[index] ^ that.storage[maxIndex];
+      that.storage[maxIndex] = that.storage[index] ^ that.storage[maxIndex];
+      that.storage[index] = that.storage[index] ^ that.storage[maxIndex];
+      
+      // reheapify at new index of current node
+      reheapify(maxIndex);
     }
   };
+
   // recursively move the swapped node down the heap until it's greater than both of its children
   reheapify(0);
 
@@ -103,7 +94,6 @@ Heap.prototype.removeMax = function() {
   return maxValue;
 };
 
-// 
 // Accepts an input array and returns a single element array with an object element
 // representing the hierarchical structure of the heap
 function arrayToHierarchy(arr) {
