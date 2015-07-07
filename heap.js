@@ -1,6 +1,6 @@
 // Heap visualization
 // Authors: Katrina Uychaco && Kalev Roomann-Kurrik
-// Last Modified: Monday July 6, 2015
+// Last Modified: Monday July 7, 2015
 
 'use strict';
 
@@ -13,7 +13,7 @@ Heap.prototype.viewStorage = function() {
   return this.storage;
 };
 
-// TODO: insertion method on prototype
+// heap insertion method on prototype
 Heap.prototype.insert = function(value) {
   // push to storage array
   this.storage.push(value);
@@ -39,8 +39,73 @@ Heap.prototype.insert = function(value) {
   return recurse(this.storage.length-1);
 };
 
-// Create function to transform heap array into a nested d3 data structure
-// Accepts an input array and returns an object representing the hierarchical structure of the heap
+// heap remove max method on prototype
+// Remove the max value from a heap, reorder the heap, and return the max value
+Heap.prototype.removeMax = function() {
+  // check if heap is currently empty
+  if (this.storage.length === 0) {
+    // if nothing to remove then return null
+    return null;
+  } else if (this.storage.length === 1) {
+    // check if heap currently has one node
+    // pop off the lone element in the storage array and return it
+    return this.storage.pop();
+  }
+  // handle all other cases where heap has more than one node
+  // preserve the max value in order to return it
+  var maxValue = this.storage[0];
+  // replace the root node with the last node of the heap and remove the last node
+  this.storage[0] = this.storage.pop();
+
+  var that = this;
+
+  // recursive function to restore the heap property of the heap
+  var reheapify = function(index) {
+    // check whether the current node has children, and if so then store their values
+    var firstChild = 2*index + 1 < that.storage.length ? that.storage[2*index + 1] : null;
+    var secondChild = 2*index + 2 < that.storage.length ? that.storage[2*index + 2] : null;
+
+    // if no children then we are done
+    if (!firstChild) {
+      return;
+    } else if (secondChild) {
+      // if the current node has two children then check if both are less than or equal to the current node
+      if (firstChild <= that.storage[index] && secondChild <= that.storage[index]) {
+        // if both children are less than or equal to the current node then we are done
+        return;
+      } else {
+        // if both children are not less than or equal to the current node
+        // then find the max of the two and swap the current node with that child
+        var maxChild = firstChild > secondChild ? 2*index + 1 : 2*index + 2;
+        // swap node at index with node at maxChild
+        that.storage[index] = that.storage[index] ^ that.storage[maxChild];
+        that.storage[maxChild] = that.storage[index] ^ that.storage[maxChild];
+        that.storage[index] = that.storage[index] ^ that.storage[maxChild];
+        // recursively reheapify this time checking the node at its new index
+        reheapify(maxChild);
+      }
+    } else {
+      // if the current node only has one child then check to see if it is greater than the current node
+      if (firstChild > that.storage[index]) {
+        // if the only child is greater than the current node then swap the child node with the current node
+        that.storage[2*index + 1] = that.storage[index];
+        that.storage[index] = firstChild;
+      }
+      // whether or not we swapped, since this node only had one child and each level of the heap
+      // must be filled before another level can start then we are done
+      return;
+    }
+  };
+  // recursively move the swapped node down the heap until it's greater than both of its children
+  reheapify(0);
+
+  // return the removed max value from the heap
+  return maxValue;
+};
+
+// 
+// Accepts an input array and returns a single element array with an object element
+// representing the hierarchical structure of the heap
 function arrayToHierarchy(arr) {
   
   // recursively build out the hierarchical structure of the heap
@@ -98,7 +163,13 @@ input.forEach(function(value) {
   console.log(heap.viewStorage());
 });
 
+console.log('heap.viewStorage:', heap.viewStorage());
 var treeData = arrayToHierarchy(heap.viewStorage());
+
+console.log('heap.removeMax():', heap.removeMax());
+console.log('heap.viewStorage:', heap.viewStorage());
+console.log('heap.removeMax():', heap.removeMax());
+console.log('heap.viewStorage:', heap.viewStorage());
 
 // D3 code for tree visualization
 var margin = {top: 20, right: 120, bottom: 20, left: 120},
