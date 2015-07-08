@@ -18,7 +18,8 @@ Heap.prototype.insert = function(value) {
   // push to storage array
   this.storage.push(value);
 
-  update(arrayToHierarchy(this.storage)[0]);
+  // update visualization based on added node
+  insertNode(value);
 
   var that = this;
 
@@ -36,7 +37,8 @@ Heap.prototype.insert = function(value) {
     that.storage[parentInd] = that.storage[index] ^ that.storage[parentInd];
     that.storage[index] = that.storage[index] ^ that.storage[parentInd];
 
-    update(arrayToHierarchy(that.storage)[0]);
+    // update visualization based on swapped nodes
+    swapNodes(index, parentInd);
 
     setTimeout(function(){
       return recurse(parentInd);
@@ -152,23 +154,31 @@ function arrayToHierarchy(arr) {
 }
 
 // D3 code for tree visualization
-var margin = {top: 20, right: 120, bottom: 20, left: 120},
-  width = 960 - margin.right - margin.left,
-  height = 500 - margin.top - margin.bottom;
-
-var i = 0;
+var width = 960,
+    height = 800;
 
 var tree = d3.layout.tree()
-  .size([height, width]);
+    .size([width - 20, height - 20]);
 
-var diagonal = d3.svg.diagonal()
-  .projection(function(d) { return [d.x, d.y]; });
+var root = {},
+    nodes = tree(root);
 
-var svg = d3.select('body').append('svg')
-  .attr('width', width + margin.right + margin.left)
-  .attr('height', height + margin.top + margin.bottom)
-  .append('g')
-  .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+root.parent = root;
+root.px = root.x;
+root.py = root.y;
+
+var diagonal = d3.svg.diagonal();
+
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+  .append("g")
+    .attr("transform", "translate(10,10)");
+
+var node = svg.selectAll(".node"),
+    link = svg.selectAll(".link");
+
+var duration = 750;
 
 // Array to represent input data
 var input = [5,7,1,10,0,12];
@@ -179,68 +189,112 @@ setInterval(function() {
   if (input.length > 0) {
     heap.insert(input.shift());
   }
-}, 6000);
+}, 1000);
 
-// input.forEach(function(value) {
-//   heap.insert(value);
-//   console.log(heap.viewStorage());
-// });
+// Update the array of nodes for the d3 tree layout based on adding nodes during Heap methods
+function insertNode(value) {
+  
+  if (nodes[0].value === undefined) {
+    // If first value is added to heap, modify root node
+    nodes[0].value = value;
+    nodes[0].id = 0;
+  } else {
+    // Add a new node to its parent in the heap.
+    var n = {id: nodes.length, value: value},
+        p = nodes[Math.ceil((nodes.length-2)/2)];
+    if (p.children) p.children.push(n); else p.children = [n];
+    nodes.push(n);
+  }
 
-// console.log('heap.viewStorage:', heap.viewStorage());
-// var treeData = arrayToHierarchy(heap.viewStorage());
+  // Recompute the layout and data join.
+  node = node.data(tree.nodes(root), function(d) { return d.id; });
+  link = link.data(tree.links(nodes), function(d) { return d.source.id + "-" + d.target.id; });
 
-// var root = treeData[0];
-
-// update(root);
-
-function update(source) {
-
-  // Compute the new tree layout.
-  var nodes = tree.nodes(source).reverse(),
-    links = tree.links(nodes);
-
-  // Normalize for fixed-depth.
-  nodes.forEach(function(d) { d.y = d.depth * 180; });
-
-  // Declare the nodes…
-  var node = svg.selectAll('g.node')
-    .data(nodes, function(d) { return d.id || (d.id = ++i); });
-
-  console.log(node);
-
-  // Enter the nodes.
   var nodeEnter = node.enter().append('g')
-    .attr('class', 'node')
-    .attr('transform', function(d) {
-      return 'translate(' + d.x + ',' + d.y + ')'; });
+      .attr('class', 'node');
 
-  nodeEnter.append('circle')
-    .attr('r', function(d) { return d.value; })
-    .style('stroke', function(d) { return d.type; })
-    .style('fill', function(d) { return d.level; });
+  // Add entering nodes in the parent’s old position.
+  nodeEnter.append("circle")
+      .attr("class", "node")
+      .attr("r", 20)
+      .attr("cx", function(d) { return d.parent.px; })
+      .attr("cy", function(d) { return d.parent.py; });
 
+  // Add text to entering nodes
   nodeEnter.append('text')
-    .attr('x', function(d) {
-      return d.children || d._children ?
-      (d.value + 4) * -1 : d.value + 4 })
-    .attr('dy', '.35em')
-    .attr('text-anchor', function(d) {
-      return d.children || d._children ? 'end' : 'start'; })
-    .text(function(d) { return d.value; })
-    .style('fill-opacity', 1);
+      .attr("x", function(d) { return d.parent.px; })
+      .attr("y", function(d) { return d.parent.py; })
+      .attr('text-anchor', function(d) {
+        return d.children || d._children ? 'end' : 'start'; })
+      .text(function(d) { return d.value; })
+      .style('fill-opacity', 1);
 
-  node.exit().remove();
+  // Add entering links in the parent’s old position.
+  link.enter().insert("path", ".node")
+      .attr("class", "link")
+      .attr("d", function(d) {
+        var o = {x: d.source.px, y: d.source.py};
+        return diagonal({source: o, target: o});
+      });
 
-  // Declare the links…
-  var link = svg.selectAll('path.link')
-    .data(links, function(d) { return d.target.id; });
+  // Transition nodes and links to their new positions.
+  var t = svg.transition()
+      .duration(duration);
 
-  // Enter the links.
-  link.enter().insert('path', 'g')
-    .attr('class', 'link')
-      .style('stroke', function(d) { return d.target.level; })
-    .attr('d', diagonal);
+  t.selectAll(".link")
+      .attr("d", diagonal);
 
+  t.selectAll(".node circle")
+      .attr("cx", function(d) { return d.px = d.x; })
+      .attr("cy", function(d) { return d.py = d.y; });
+
+  t.selectAll(".node text")
+      .attr("x", function(d) { return d.px = d.x; })
+      .attr("y", function(d) { return d.py = d.y; });
+}
+
+// Update the array of nodes for the d3 tree layout based on swapping during Heap methods
+function swapNodes(index, parentInd) {
+  // update nodes array
+  // find nodes at index and parentInd
+  // swap the x,y coordinates between node at index and node at parentInd
+
+  // Reassign children
+  // store non-index node child of parent (if it has one)
+  // assign parentInd node the children of index node
+  // assign parentInd node and its child (that isn't the index node) as the child of index node
+
+  // Reassign parents
+  // store parent of parentInd
+  // assign parent of parentInd node as parent of index node
+  // assign index node as the parent of parentInd node
+
+}
+
+// Perform animation of swapping of nodes and re-establishing links between swapped nodes
+function animateSwap() {
+  // Recompute links between nodes post swapping
+  link = link.data(tree.links(nodes), function(d) { return d.source.id + "-" + d.target.id; });
+  
+  // Add entering links
+  link.enter().insert("path", ".node")
+      .attr("class", "link")
+      .attr("d", function(d) {
+        var o = {x: d.source.px, y: d.source.py};
+        return diagonal({source: o, target: o});
+      });
+  
+  // Remove exit links
   link.exit().remove();
 
+  // Transition nodes and links to new positions
+  var t = svg.transition()
+      .duration(duration);
+
+  t.selectAll(".link")
+      .attr("d", diagonal);
+
+  t.selectAll(".node")
+      .attr("cx", function(d) { return d.px = d.x; })
+      .attr("cy", function(d) { return d.py = d.y; });
 }
