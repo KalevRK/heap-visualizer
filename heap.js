@@ -257,17 +257,54 @@ function insertNode(value) {
 function swapNodes(index, parentInd) {
   // update nodes array
   // find nodes at index and parentInd
+  var current = nodes[index];
+  var parent = nodes[parentInd];
+
   // swap the x,y coordinates between node at index and node at parentInd
+  current.x = current.x ^ parent.x;
+  parent.x = current.x ^ parent.x;
+  current.x = current.x ^ parent.x;
+
+  current.y = current.y ^ parent.y;
+  parent.y = current.y ^ parent.y;
+  current.y = current.y ^ parent.y;
+
+  // swap the depth between node at index and node at parentInd
+  current.depth = current.depth ^ parent.depth;
+  parent.depth = current.depth ^ parent.depth;
+  current.depth = current.depth ^ parent.depth;
 
   // Reassign children
   // store non-index node child of parent (if it has one)
+  var parentOrphan = parent.children.filter(function(child) {
+    return child.id !== current.id;
+  });
+  // store current children for assigning correct parent
+  var currentOrphans = current.children || [];
   // assign parentInd node the children of index node
+  parent.children = current.children;
   // assign parentInd node and its child (that isn't the index node) as the child of index node
+  current.children = parentOrphan.concat(parent);
 
   // Reassign parents
-  // store parent of parentInd
+  // for grandParent's children, overwrite parent with current
+  parent.parent.children.forEach(function(child, i, children) {
+    if (child.id === parent.id) {
+      children[i] = current;
+    }
+  });
   // assign parent of parentInd node as parent of index node
+  current.parent = parent.parent;
   // assign index node as the parent of parentInd node
+  parent.parent = current;
+  // assign parent of parentOrphan node as index node
+  parentOrphan.forEach(function(child) {
+    child.parent = current;
+  });
+  // assign parent of currentOrphans as parent node
+  currentOrphans.forEach(function(child) {
+    child.parent = parent;
+  });
 
 }
 
