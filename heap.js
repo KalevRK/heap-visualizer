@@ -18,6 +18,8 @@ Heap.prototype.insert = function(value) {
   // push to storage array
   this.storage.push(value);
 
+  update(arrayToHierarchy(this.storage)[0]);
+
   var that = this;
 
   // recursive function to handle swaps, input index
@@ -34,9 +36,15 @@ Heap.prototype.insert = function(value) {
     that.storage[parentInd] = that.storage[index] ^ that.storage[parentInd];
     that.storage[index] = that.storage[index] ^ that.storage[parentInd];
 
-    return recurse(parentInd);
+    update(arrayToHierarchy(that.storage)[0]);
+
+    setTimeout(function(){
+      return recurse(parentInd);
+    }, 2000);
   };
-  return recurse(this.storage.length-1);
+  setTimeout(function() {
+    return recurse(that.storage.length-1);
+  }, 2000);
 };
 
 // heap remove max method on prototype
@@ -143,24 +151,6 @@ function arrayToHierarchy(arr) {
   return nodeData;
 }
 
-// Array to represent input data
-var input = [5,7,1,10,0,12];
-
-var heap = new Heap();
-
-input.forEach(function(value) {
-  heap.insert(value);
-  console.log(heap.viewStorage());
-});
-
-console.log('heap.viewStorage:', heap.viewStorage());
-var treeData = arrayToHierarchy(heap.viewStorage());
-
-console.log('heap.removeMax():', heap.removeMax());
-console.log('heap.viewStorage:', heap.viewStorage());
-console.log('heap.removeMax():', heap.removeMax());
-console.log('heap.viewStorage:', heap.viewStorage());
-
 // D3 code for tree visualization
 var margin = {top: 20, right: 120, bottom: 20, left: 120},
   width = 960 - margin.right - margin.left,
@@ -180,21 +170,33 @@ var svg = d3.select('body').append('svg')
   .append('g')
   .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-var root = treeData[0];
+// Array to represent input data
+var input = [5,7,1,10,0,12];
 
-update(root);
+var heap = new Heap();
 
-setTimeout(function() {
-  console.log('Updating tree');
-  treeData = arrayToHierarchy(heap.viewStorage());
-  console.log('treeData:', treeData);
-  update(treeData[0]);
-}, 2000);
+setInterval(function() {
+  if (input.length > 0) {
+    heap.insert(input.shift());
+  }
+}, 6000);
+
+// input.forEach(function(value) {
+//   heap.insert(value);
+//   console.log(heap.viewStorage());
+// });
+
+// console.log('heap.viewStorage:', heap.viewStorage());
+// var treeData = arrayToHierarchy(heap.viewStorage());
+
+// var root = treeData[0];
+
+// update(root);
 
 function update(source) {
 
   // Compute the new tree layout.
-  var nodes = tree.nodes(root).reverse(),
+  var nodes = tree.nodes(source).reverse(),
     links = tree.links(nodes);
 
   // Normalize for fixed-depth.
@@ -203,6 +205,8 @@ function update(source) {
   // Declare the nodes…
   var node = svg.selectAll('g.node')
     .data(nodes, function(d) { return d.id || (d.id = ++i); });
+
+  console.log(node);
 
   // Enter the nodes.
   var nodeEnter = node.enter().append('g')
@@ -225,6 +229,8 @@ function update(source) {
     .text(function(d) { return d.value; })
     .style('fill-opacity', 1);
 
+  node.exit().remove();
+
   // Declare the links…
   var link = svg.selectAll('path.link')
     .data(links, function(d) { return d.target.id; });
@@ -234,5 +240,7 @@ function update(source) {
     .attr('class', 'link')
       .style('stroke', function(d) { return d.target.level; })
     .attr('d', diagonal);
+
+  link.exit().remove();
 
 }
