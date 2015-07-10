@@ -1,6 +1,6 @@
 // Heap visualization
 // Authors: Katrina Uychaco && Kalev Roomann-Kurrik
-// Last Modified: Tuesday July 7, 2015
+// Last Modified: Thursday July 9, 2015
 
 'use strict';
 
@@ -137,6 +137,7 @@ var input = [5,7,1,10,4];
 
 var heap = new Heap();
 
+// insert new values into the heap on a regular interval for testing
 setInterval(function() {
   if (input.length > 0) {
     heap.insert(input.shift());
@@ -159,7 +160,7 @@ function insertNode(value) {
   }
 
   // Recompute the layout and data join.
-  root = nodes[0];
+  // root = nodes[0];
   node = node.data(tree.nodes(root), function(d) { return d.id; });
   link = link.data(tree.links(nodes), function(d) { return d.source.id + "-" + d.target.id; });
 
@@ -208,6 +209,7 @@ function insertNode(value) {
 
 // Update the array of nodes for the d3 tree layout based on swapping during Heap methods
 function swapNodes(index, parentInd) {
+
   // update nodes array
   // find nodes at index and parentInd
   var current = nodes[index];
@@ -218,9 +220,17 @@ function swapNodes(index, parentInd) {
   parent.x = current.x ^ parent.x;
   current.x = current.x ^ parent.x;
 
+  current.px = current.px ^ parent.px;
+  parent.px = current.px ^ parent.px;
+  current.px = current.px ^ parent.px;
+
   current.y = current.y ^ parent.y;
   parent.y = current.y ^ parent.y;
   current.y = current.y ^ parent.y;
+
+  current.py = current.py ^ parent.py;
+  parent.py = current.py ^ parent.py;
+  current.py = current.py ^ parent.py;
 
   // swap the depth between node at index and node at parentInd
   current.depth = current.depth ^ parent.depth;
@@ -249,7 +259,7 @@ function swapNodes(index, parentInd) {
 
   // Reassign parents
   // assign parent of parentInd node as parent of index node
-  current.parent = parent.parent;
+  current.parent = parent.parent === parent ? current : parent.parent;
   // assign index node as the parent of parentInd node
   parent.parent = current;
   // assign parent of parentOrphan node as index node
@@ -261,10 +271,20 @@ function swapNodes(index, parentInd) {
     child.parent = parent;
   });
 
+  // swap actual nodes in nodes array
   var temp = nodes[index];
   nodes[index] = nodes[parentInd];
   nodes[parentInd] = temp;
 
+  // update root if one of the swapped nodes was at index zero of the nodes array
+  if (index === 0 || parentInd === 0) {
+    root = nodes[0];
+    root.parent = root;
+    root.px = root.x;
+    root.py = root.y;
+  }
+
+  // animate the swapping of the nodes
   animateSwap();
 }
 
@@ -291,12 +311,11 @@ function animateSwap() {
   t.selectAll(".link")
       .attr("d", diagonal);
 
-  t.selectAll("circle")
-      .attr("cx", function(d) { return d.px = d.x; })
-      .attr("cy", function(d) { return d.py = d.y; });
+  t.selectAll(".node")
+      .attr("cx", function(d) { return d.x; })
+      .attr("cy", function(d) { return d.y; });
 
-
-  t.selectAll("text")
-      .attr("x", function(d) { return d.px = d.x; })
-      .attr("y", function(d) { return d.py = d.y; });
+  t.selectAll(".node text")
+      .attr("x", function(d) { return d.x; })
+      .attr("y", function(d) { return d.y; });
 }
