@@ -250,6 +250,7 @@ function swapNodes(index, parentInd) {
   // assign parentInd node and its child (that isn't the index node) as the child of index node
   current.children = [parent].concat(parentOrphan);
   // for grandParent's children, overwrite parent with current
+
   parent.parent.children = parent.parent.children || [];
   parent.parent.children.forEach(function(child, i, children) {
     if (child.id === parent.id) {
@@ -270,6 +271,7 @@ function swapNodes(index, parentInd) {
   currentOrphans.forEach(function(child) {
     child.parent = parent;
   });
+
 
   // swap actual nodes in nodes array
   var temp = nodes[index];
@@ -311,11 +313,12 @@ function animateSwap() {
   t.selectAll(".link")
       .attr("d", diagonal);
 
-  t.selectAll(".node")
-      .attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; });
+  t.selectAll("circle")
+      .attr("cx", function(d) { return d.px = d.x; })
+      .attr("cy", function(d) { return d.py = d.y; });
 
-  t.selectAll(".node text")
-      .attr("x", function(d) { return d.x; })
-      .attr("y", function(d) { return d.y; });
+
+  t.selectAll("text")
+      .attr("x", function(d) { return d.px = d.x; })
+      .attr("y", function(d) { return d.py = d.y; });
 }
