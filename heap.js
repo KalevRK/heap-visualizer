@@ -42,11 +42,11 @@ Heap.prototype.insert = function(value) {
 
     setTimeout(function(){
       return recurse(parentInd);
-    }, 2000);
+    }, 1000);
   };
   setTimeout(function() {
     return recurse(that.storage.length-1);
-  }, 2000);
+  }, 1000);
 };
 
 // heap remove max method on prototype
@@ -104,6 +104,7 @@ Heap.prototype.removeMax = function() {
   return maxValue;
 };
 
+
 // D3 code for tree visualization
 var width = 960,
     height = 800;
@@ -124,7 +125,7 @@ var svg = d3.select("body").append("svg")
     .attr("width", width)
     .attr("height", height)
   .append("g")
-    .attr("transform", "translate(30,30)");
+    .attr("transform", "translate(10,30)");
 
 var node = svg.selectAll(".node"),
     link = svg.selectAll(".link");
@@ -132,7 +133,7 @@ var node = svg.selectAll(".node"),
 var duration = 750;
 
 // Array to represent input data
-var input = [5,7,1,10,0,12];
+var input = [5,7,1,10,4];
 
 var heap = new Heap();
 
@@ -141,7 +142,7 @@ setInterval(function() {
   if (input.length > 0) {
     heap.insert(input.shift());
   }
-}, 6000);
+}, 3000);
 
 // Update the array of nodes for the d3 tree layout based on adding nodes during Heap methods
 function insertNode(value) {
@@ -229,6 +230,7 @@ function swapNodes(index, parentInd) {
 
   // Reassign children
   // store non-index node child of parent (if it has one)
+  parent.children = parent.children || [];
   var parentOrphan = parent.children.filter(function(child) {
     return child.id !== current.id;
   });
@@ -237,17 +239,17 @@ function swapNodes(index, parentInd) {
   // assign parentInd node the children of index node
   parent.children = current.children;
   // assign parentInd node and its child (that isn't the index node) as the child of index node
-  current.children = parentOrphan.concat(parent);
+  current.children = [parent].concat(parentOrphan);
+  // for grandParent's children, overwrite parent with current
+
+  parent.parent.children = parent.parent.children || [];
+  parent.parent.children.forEach(function(child, i, children) {
+    if (child.id === parent.id) {
+      children[i] = current;
+    }
+  });
 
   // Reassign parents
-  // for grandParent's children, overwrite parent with current
-  if(parent.parent.children) {
-    parent.parent.children.forEach(function(child, i, children) {
-      if (child.id === parent.id) {
-        children[i] = current;
-      }
-    });
-  }
   // assign parent of parentInd node as parent of index node
   current.parent = parent.parent === parent ? current : parent.parent;
   // assign index node as the parent of parentInd node
@@ -260,6 +262,7 @@ function swapNodes(index, parentInd) {
   currentOrphans.forEach(function(child) {
     child.parent = parent;
   });
+
 
   // swap actual nodes in nodes array
   var temp = nodes[index];
@@ -301,11 +304,12 @@ function animateSwap() {
   t.selectAll(".link")
       .attr("d", diagonal);
 
-  t.selectAll(".node")
-      .attr("cx", function(d) { return d.x; })
-      .attr("cy", function(d) { return d.y; });
+  t.selectAll("circle")
+      .attr("cx", function(d) { return d.px = d.x; })
+      .attr("cy", function(d) { return d.py = d.y; });
 
-  t.selectAll(".node text")
-      .attr("x", function(d) { return d.x; })
-      .attr("y", function(d) { return d.y; });
+
+  t.selectAll("text")
+      .attr("x", function(d) { return d.px = d.x; })
+      .attr("y", function(d) { return d.py = d.y; });
 }
