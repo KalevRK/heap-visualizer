@@ -104,7 +104,6 @@ Heap.prototype.removeMax = function() {
   return maxValue;
 };
 
-
 // D3 code for tree visualization
 var width = 960,
     height = 800;
@@ -166,7 +165,7 @@ function insertNode(value) {
 
   var nodeEnter = node.enter().append('g')
       .attr('class', 'node');
-
+  
   // Add entering nodes in the parent’s old position.
   nodeEnter.append("circle")
       .attr("class", "node")
@@ -250,7 +249,6 @@ function swapNodes(index, parentInd) {
   // assign parentInd node and its child (that isn't the index node) as the child of index node
   current.children = [parent].concat(parentOrphan);
   // for grandParent's children, overwrite parent with current
-
   parent.parent.children = parent.parent.children || [];
   parent.parent.children.forEach(function(child, i, children) {
     if (child.id === parent.id) {
@@ -271,7 +269,6 @@ function swapNodes(index, parentInd) {
   currentOrphans.forEach(function(child) {
     child.parent = parent;
   });
-
 
   // swap actual nodes in nodes array
   var temp = nodes[index];
