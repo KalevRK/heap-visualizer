@@ -15,6 +15,12 @@ Heap.prototype.viewStorage = function() {
 
 // heap insertion method on prototype
 Heap.prototype.insert = function(value) {
+
+  if (value === undefined) {
+    value = parseInt(document.getElementById('inputVal').value);
+    document.getElementById('inputVal').value = '';
+  }
+
   // push to storage array
   this.storage.push(value);
 
