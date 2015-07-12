@@ -9,10 +9,16 @@
       <input type='submit' value='Insert'>
     </form>
     <br/>
+    <form onsubmit='setDelay(); return false;'>
+      <input id='delayTime' type='text' placeHolder='milliseconds'/>
+      <input type='submit' value='Set Delay Time'>
+    </form>
+    <br/>
     <button id='remove' onclick='heap.removeMax()'>Remove Max</button>
     <div class='main'>
     </div>
     <script src='d3.js'></script>
     <script src='heap.js'></script>
+    <script src='visualize.js'></script>
   </body>
 </html>
