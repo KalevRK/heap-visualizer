@@ -4,9 +4,15 @@
     <link rel='stylesheet' type='css' href='styles.css'>
   </head>
   <body>
-    <div class="main">
+    <form onsubmit='heap.insert(); return false;'>
+      <input id='inputVal' type='text'/>
+      <input type='submit' value='Insert'>
+    </form>
+    <br/>
+    <button id='remove' onclick='heap.removeMax()'>Remove Max</button>
+    <div class='main'>
     </div>
-    <script src="d3.js"></script>
+    <script src='d3.js'></script>
     <script src='heap.js'></script>
   </body>
 </html>
