@@ -13,7 +13,7 @@ Tasks
 - [x] Rotate d3 tree layout visualization to be vertical
 - [x] Update d3 tree layout visualization based on state of Heap storage array
 - [x] Update d3 tree layout visualization on every step of the insert method on the Heap class
-- [ ] Update d3 tree layout visualization on every step of the removeMax method on the Heap class
-- [ ] Add form to allow user to insert values into Heap
-- [ ] Add button to allow user to remove max value from Heap
+- [x] Update d3 tree layout visualization on every step of the removeMax method on the Heap class
+- [x] Add form to allow user to insert values into Heap
+- [x] Add button to allow user to remove max value from Heap
 - [ ] Add test suite
