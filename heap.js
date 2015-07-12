@@ -29,7 +29,7 @@ Heap.prototype.insert = function(value) {
     // get parent index
     var parentInd = Math.ceil(index/2-1);
     // BC: value < parent or parent is null
-    if (parentInd < 0 || that.storage[index] < that.storage[parentInd]) {
+    if (parentInd < 0 || that.storage[index] <= that.storage[parentInd]) {
       return 'value added to index '+index;
     }
     // RC: swap with parent and make recursive call
@@ -42,11 +42,11 @@ Heap.prototype.insert = function(value) {
 
     setTimeout(function(){
       return recurse(parentInd);
-    }, 1000);
+    }, 300);
   };
   setTimeout(function() {
     return recurse(that.storage.length-1);
-  }, 1000);
+  }, 300);
 };
 
 // heap remove max method on prototype
@@ -58,13 +58,61 @@ Heap.prototype.removeMax = function() {
     return null;
   } else if (this.storage.length === 1) {
     // if heap only has one element in it then pop off the lone element in the storage array and return it
-    return this.storage.pop();
+    var removed = this.storage.pop();
+
+    // reset root and nodes to initial state
+    root = {};
+    nodes = tree(root);
+    root.parent = root;
+    root.px = root.x;
+    root.py = root.y;
+
+    // remove node from DOM
+    animateSwap();
+
+    // reset node to initial state
+    node = initialNode;
+    return removed;
   }
   // handle all other cases where heap has more than one node
   // preserve the max value in order to return it
   var maxValue = this.storage[0];
   // replace the root node with the last node of the heap and remove the last node
   this.storage[0] = this.storage.pop();
+
+  swapRoot();
+
+  function swapRoot() {
+    // take last node and make root (put in nodes[0])
+    var newRoot = nodes.pop();
+    var oldRoot = nodes[0];
+    nodes[0] = newRoot;
+    root = newRoot;
+    // update x,y,px,py,depth
+    newRoot.x = oldRoot.x;
+    newRoot.y = oldRoot.y;
+    newRoot.px = oldRoot.px;
+    newRoot.py = oldRoot.xpy
+    newRoot.depth = oldRoot.depth;
+    // update parents and children for new root
+    oldRoot.children.forEach(function(child) {
+      child.parent = newRoot;
+    });
+    newRoot.children = oldRoot.children;
+    newRoot.parent.children = newRoot.parent.children.filter(function(child) {
+      return child.id !== newRoot.id;
+    });
+    newRoot.parent = newRoot;
+    newRoot.px = newRoot.x;
+    newRoot.py = newRoot.y;
+    
+    // animate
+    animateSwap();
+  }
+
+
+
+
 
   // preserve context for inner recursive helper function
   var that = this;
@@ -91,14 +139,20 @@ Heap.prototype.removeMax = function() {
       that.storage[index] = that.storage[index] ^ that.storage[maxIndex];
       that.storage[maxIndex] = that.storage[index] ^ that.storage[maxIndex];
       that.storage[index] = that.storage[index] ^ that.storage[maxIndex];
-      
+
+      swapNodes(maxIndex, index);
+
       // reheapify at new index of current node
-      reheapify(maxIndex);
+      setTimeout(function() {
+        reheapify(maxIndex);
+      }, 300);
     }
   };
 
   // recursively move the swapped node down the heap until it's greater than both of its children
-  reheapify(0);
+  setTimeout(function() {
+    reheapify(0);
+  }, 300);
 
   // return the removed max value from the heap
   return maxValue;
@@ -127,22 +181,11 @@ var svg = d3.select("body").append("svg")
   .append("g")
     .attr("transform", "translate(10,30)");
 
-var node = svg.selectAll(".node"),
+var initialNode = svg.selectAll(".node"),
+    node = initialNode,
     link = svg.selectAll(".link");
 
-var duration = 750;
-
-// Array to represent input data
-var input = [5,7,1,10,4];
-
-var heap = new Heap();
-
-// insert new values into the heap on a regular interval for testing
-setInterval(function() {
-  if (input.length > 0) {
-    heap.insert(input.shift());
-  }
-}, 3000);
+var duration = 250;
 
 // Update the array of nodes for the d3 tree layout based on adding nodes during Heap methods
 function insertNode(value) {
@@ -160,7 +203,6 @@ function insertNode(value) {
   }
 
   // Recompute the layout and data join.
-  // root = nodes[0];
   node = node.data(tree.nodes(root), function(d) { return d.id; });
   link = link.data(tree.links(nodes), function(d) { return d.source.id + "-" + d.target.id; });
 
@@ -169,7 +211,6 @@ function insertNode(value) {
 
   // Add entering nodes in the parent’s old position.
   nodeEnter.append("circle")
-      .attr("class", "node")
       .attr("r", 20)
       .attr("cx", function(d) { return d.parent.px; })
       .attr("cy", function(d) { return d.parent.py; });
@@ -198,14 +239,15 @@ function insertNode(value) {
   t.selectAll(".link")
       .attr("d", diagonal);
 
-  t.selectAll(".node circle")
+  t.selectAll("circle")
       .attr("cx", function(d) { return d.px = d.x; })
       .attr("cy", function(d) { return d.py = d.y; });
 
-  t.selectAll(".node text")
+  t.selectAll("text")
       .attr("x", function(d) { return d.px = d.x; })
       .attr("y", function(d) { return d.py = d.y; });
 }
+
 
 // Update the array of nodes for the d3 tree layout based on swapping during Heap methods
 function swapNodes(index, parentInd) {
@@ -292,6 +334,11 @@ function swapNodes(index, parentInd) {
 
 // Perform animation of swapping of nodes and re-establishing links between swapped nodes
 function animateSwap() {
+
+  // remove exit nodes
+  node = node.data(tree.nodes(root), function(d) { return d.id; });
+  node.exit().remove();
+
   // Recompute links between nodes post swapping
   link = link.data(tree.links(nodes), function(d) { return d.source.id + "-" + d.target.id; });
   
@@ -317,8 +364,20 @@ function animateSwap() {
       .attr("cx", function(d) { return d.px = d.x; })
       .attr("cy", function(d) { return d.py = d.y; });
 
-
   t.selectAll("text")
       .attr("x", function(d) { return d.px = d.x; })
       .attr("y", function(d) { return d.py = d.y; });
 }
+
+
+// Array to represent input data
+var input = [/*5,7,1,2*/];
+
+var heap = new Heap();
+
+// insert new values into the heap on a regular interval for testing
+setInterval(function() {
+  if (input.length > 0) {
+    heap.insert(input.shift());
+  }
+}, 1000);
