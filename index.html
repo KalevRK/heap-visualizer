@@ -2,8 +2,11 @@
 <html>
   <head>
     <link rel='stylesheet' type='css' href='styles.css'>
+    <link href='lib/bootstrap.min.css' rel='stylesheet'>
+    <title>Heap Visualizer</title>
   </head>
   <body>
+  <h1>Heap Visualizer</h1>
     <form onsubmit='heap.insert(); return false;'>
       <input id='inputVal' type='text'/>
       <input type='submit' value='Insert'>
@@ -17,7 +20,7 @@
     <button id='remove' onclick='heap.removeMax()'>Remove Max</button>
     <div class='main'>
     </div>
-    <script src='d3.js'></script>
+    <script src='lib/d3.min.js'></script>
     <script src='heap.js'></script>
     <script src='visualize.js'></script>
   </body>
