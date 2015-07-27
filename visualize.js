@@ -148,15 +148,26 @@ var swapNodes = function(index, parentInd) {
   // Reassign children
   // Store non-index node child of parent (if it has one)
   parent.children = parent.children || [];
-  var parentOrphan = parent.children.filter(function(child) {
+
+  // Track index of orphan node
+  var orphanIndex;
+
+  var parentOrphan = parent.children.filter(function(child, index) {
+    if (child.id !== current.id) orphanIndex = index;
     return child.id !== current.id;
   });
   // Store current children for assigning correct parent
   var currentOrphans = current.children || [];
   // Assign parentInd node the children of index node
   parent.children = current.children;
+  // Keep track of order of current children nodes
+  // and assign parentOrphan to correct position in children array
+  current.children = [parent];
+
   // Assign parentInd node and its child (that isn't the index node) as the child of index node
-  current.children = [parent].concat(parentOrphan);
+  if (orphanIndex !== undefined) {
+    current.children.splice(orphanIndex,0,parentOrphan[0]);
+  }
   // For grandParent's children, overwrite parent with current
   parent.parent.children = parent.parent.children || [];
   parent.parent.children.forEach(function(child, i, children) {
